@@ -1,0 +1,300 @@
+                <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .popup {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            box-sizing: border-box;
+            width: 300px;
+            text-align: center;
+            z-index: 3;
+        }
+
+        .popup h2 {
+            color: #333;
+        }
+
+        .popup p {
+            color: #555;
+        }
+
+        .popup button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #555;
+        }
+
+        .error-container {
+            text-align: center;
+            margin-bottom: 20px;
+            color: red;
+        }
+
+        .success-container {
+            text-align: center;
+            margin-bottom: 20px;
+            color: green;
+        }
+
+        .dashboard-container {
+            background-color: #3498db;
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .dashboard-container h2 {
+            margin: 10;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            position: absolute;
+            top: 5%;
+            right: 5%;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .content {
+            margin-top: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+
+        .transfer-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 300px;
+            max-width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .transfer-container h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .transfer-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group button {
+            background-color: #3498db;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .form-group button:hover {
+            background-color: #2980b9;
+        }
+
+        #senderAccount {
+            width: calc(100% - 16px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f4f4f4;
+            color: #555;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    {% if error %}
+        <div class="overlay" id="error_overlay" style="display:flex;">
+            <div class="popup error-container">
+                <span class="close-btn" onclick="closePopup()">&times;</span>
+                <h2>Error</h2>
+                <p>{{error.error}}</p>
+                <button onclick="closePopup()">Close</button>
+            </div>
+        </div>
+    {% endif %}
+    {% if success %}
+        <div class="overlay" id="success_overlay" style="display:flex;">
+            <div class="popup success-container">
+                <span class="close-btn" onclick="closePopup()">&times;</span>
+                <h2>Success</h2>
+                <p>{{success.msg}}</p>
+                <button onclick="closePopup()">Close</button>
+            </div>
+        </div>
+    {% endif %}
+    <script>
+        function closePopup() {
+            // Hide the overlay
+            document.querySelectorAll('.overlay').forEach(function (overlay) {
+                overlay.style.display = 'none';
+            });
+        }
+    </script>
+    <script>
+        function submitForm(event) {
+            // Prevent the default form submission
+            event.preventDefault();
+
+            // Get the access token from the cookie
+            const accessToken = getCookie('access_token');
+
+            // Form data to be sent in the request
+            const formData = new FormData(event.target);
+
+            // Make the Fetch API request
+            fetch('/transfer', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Connection': 'keep-alive',
+                    'Accept': '*/*',
+                },
+                body: formData,
+            })
+        .then(response => response.text())
+        .then(html => {
+            // Replace the current content with the new content
+            document.body.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error during fetch:', error);
+            // Handle the error, e.g., show an error popup
+        });
+        }
+
+        // Function to get the value of a cookie by name
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        function logout() {
+    console.log('Logout button clicked');
+    const accessToken = getCookie('access_token');
+
+    // Make the Fetch API request for logout
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Connection': 'keep-alive',
+            'Accept': '*/*',
+        },
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Replace the current content with the new content
+        document.body.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error during fetch:', error);
+        // Handle the error, e.g., show an error popup
+    });
+    }
+
+    </script>
+    <div class="dashboard-container">
+        <h2>Hi {{data.name}}, Welcome to Your Bank Dashboard</h2>
+        <button class="logout-button" onclick="logout()">Logout</button>
+    </div>
+    <div class="content">
+        <div class="transfer-container">
+            <h2>Money Transfer</h2>
+            <form class="transfer-form" onsubmit="submitForm(event)" >
+                <div class="form-group">
+                    <input type="text" id="senderAccount" name="senderAccount" value="{{data.account_number}}" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="accountNumber">Account Number:</label>
+                    <input type="text" id="accountNumber" name="accountNumber" placeholder="Enter account number" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" name="amount" placeholder="Enter amount" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Transfer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
