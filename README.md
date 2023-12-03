@@ -20,3 +20,43 @@ Enter the below code in the docker-compose.yml file to use the mongo DB Docker I
       - mongo_db:/data/db
 ```
 Mapping the container's port 27017 to the host machine's port 2717
+
+### Dockerization of application code
+```commandline
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app
+    environment:
+      MONGODB_URI: mongodb://mongo_db:2717
+      DB_NAME: bank
+    depends_on:
+      - mongo_db
+```
+This is to be added into the docker-compose.yml file. The name of the container is `backend`
+and can be accessed using port 8000.
+
+We build the contents of the Dockerfile below to create and run the container:
+```commandline
+FROM python:3.9
+WORKDIR app/
+
+COPY requirements.txt requirements.txt
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+#### Command to run the containers
+```commandline
+docker compose up --build 
+```
+This command will start both the `backend` and `db_container` containers
+
+## JWT Tokenization
