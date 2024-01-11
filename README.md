@@ -60,3 +60,39 @@ docker compose up --build
 This command will start both the `backend` and `db_container` containers
 
 ## JWT Tokenization
+JSON Web Tokens (JWT) are a compact, URL-safe means of representing claims between two parties. In the context of this 
+project, JWT tokenization refers to the process of generating and validating JWTs to enhance authentication and secure data exchange.
+- **Token Generation:** Create JWTs with user information and expiration time.
+- **Token Verification:** Validate incoming JWTs, ensuring their integrity and authenticity.
+- **User Authentication:** Use JWTs to authenticate users and authorize access to protected endpoints.
+
+```commandline
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    return encoded_jwt
+```
+
+`create_access_token` function generates an access token based on input data. It creates a payload containing user data, 
+adds an expiration time, and encodes it into a JSON Web Token (JWT) using the provided secret key and algorithm.
+
+```commandline
+def verify_access_token(token: Annotated[str, Depends(oauth2_scheme)], credentials_exception):
+    try:
+        if token in auth.invalidated_tokens:
+            raise credentials_exception
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_email: str = payload.get("email")
+        if user_email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    return user_email
+```
+`verify_access_token` checks if a given token is valid by decoding it using the secret key and algorithm.
+
+It also checks if the token is present in the list of invalidated tokens (from the auth module) to ensure tokens are not used after being invalidated.
