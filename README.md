@@ -96,3 +96,28 @@ def verify_access_token(token: Annotated[str, Depends(oauth2_scheme)], credentia
 `verify_access_token` checks if a given token is valid by decoding it using the secret key and algorithm.
 
 It also checks if the token is present in the list of invalidated tokens (from the auth module) to ensure tokens are not used after being invalidated.
+
+### MongoDB transactions
+To make a bank transfer, changes have to made to both the sender account 
+and receiver account
+```commandline
+accounts_collection.update_one(
+            {"account_number": senderAccount},
+            {
+                "$inc": {"balance": -amount},
+                "$push": {"transfers_complete": transfer_id},
+            })
+        accounts_collection.update_one(
+            {"account_number": accountNumber},
+            {
+                "$inc": {"balance": amount},
+                "$push": {"transfers_complete": transfer_id},
+            })
+```
+## Usage of FastAPI
+1. Modern Web Development:
+Embrace FastAPI's modern approach to web development, leveraging Python type hints for automatic data validation.
+Benefit from asynchronous support, enhancing concurrency and scalability compared to traditional synchronous frameworks.
+2. Fast and Predictable:
+Leverage FastAPI's exceptional performance, surpassing traditional Python frameworks like Flask.
+Enjoy predictable behavior, simplifying debugging and maintenance.
